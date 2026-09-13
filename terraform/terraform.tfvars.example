@@ -1,0 +1,3 @@
+domain_name   = "example.co.uk"
+image_tag     = "0123456"
+desired_count = 1
