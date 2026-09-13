@@ -14,3 +14,16 @@ crash.*.log
 
 # Keep shareable examples
 !*.tfvars.example
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Local Terraform overrides and CLI configuration
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc

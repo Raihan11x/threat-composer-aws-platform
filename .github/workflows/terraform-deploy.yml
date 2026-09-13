@@ -1,0 +1,126 @@
+name: Terraform Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Terraform operation to run"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+      confirmation:
+        description: "Type PLAN, CONFIRM, or DESTROY to match the operation"
+        required: true
+        type: string
+      image_tag:
+        description: "Immutable image tag, using a 7 to 40 character Git SHA"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-production
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.operation }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      AWS_REGION: eu-west-2
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+      TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+      TF_VAR_image_tag: ${{ inputs.image_tag }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate requested operation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          case "$OPERATION" in
+            plan) expected="PLAN" ;;
+            apply) expected="CONFIRM" ;;
+            destroy) expected="DESTROY" ;;
+          esac
+
+          if [ "$CONFIRMATION" != "$expected" ]; then
+            echo "::error::Confirmation must be $expected for $OPERATION."
+            exit 1
+          fi
+
+          if [[ ! "$IMAGE_TAG" =~ ^[0-9a-f]{7,40}$ ]]; then
+            echo "::error::Image tag must be a 7 to 40 character lowercase Git SHA."
+            exit 1
+          fi
+
+      - name: Validate deployment configuration
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          GIT_REF: ${{ github.ref }}
+          ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          if [ "$GIT_REF" != "refs/heads/main" ]; then
+            echo "::error::Terraform deployment must run from main."
+            exit 1
+          fi
+
+          for variable in DOMAIN_NAME ROLE_ARN STATE_BUCKET; do
+            if [ -z "${!variable}" ]; then
+              echo "::error::Required repository variable $variable is not configured."
+              exit 1
+            fi
+          done
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: terraform-${{ github.run_id }}
+          mask-aws-account-id: true
+
+      - name: Initialize Terraform
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+      - name: Validate configuration
+        run: terraform validate
+
+      - name: Create deployment plan
+        if: inputs.operation != 'destroy'
+        run: terraform plan -out=tfplan
+
+      - name: Create destruction plan
+        if: inputs.operation == 'destroy'
+        run: terraform plan -destroy -out=tfplan
+
+      - name: Apply reviewed plan
+        if: inputs.operation == 'apply' || inputs.operation == 'destroy'
+        run: terraform apply -auto-approve tfplan
