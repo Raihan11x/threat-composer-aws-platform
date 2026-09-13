@@ -10,6 +10,12 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
   }
 }
 
+locals {
+  github_repository_parts = split("/", var.github_repository)
+
+  github_oidc_subject = "repo:${local.github_repository_parts[0]}@${var.github_repository_owner_id}/${local.github_repository_parts[1]}@${var.github_repository_id}:ref:refs/heads/main"
+}
+
 data "aws_iam_policy_document" "github_actions_assume_role" {
   statement {
     effect = "Allow"
@@ -40,7 +46,7 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
       variable = "token.actions.githubusercontent.com:sub"
 
       values = [
-        "repo:${var.github_repository}:ref:refs/heads/main",
+        local.github_oidc_subject,
       ]
     }
   }
