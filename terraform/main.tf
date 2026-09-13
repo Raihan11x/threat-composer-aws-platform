@@ -20,3 +20,18 @@ module "network" {
   ]
   common_tags = local.common_tags
 }
+
+module "route53_zone" {
+  source = "./modules/route53-zone"
+
+  domain_name = var.domain_name
+  common_tags = local.common_tags
+}
+
+module "acm" {
+  source = "./modules/acm"
+
+  domain_name    = local.app_hostname
+  hosted_zone_id = module.route53_zone.zone_id
+  common_tags    = local.common_tags
+}
