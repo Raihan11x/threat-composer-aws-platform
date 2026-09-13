@@ -1,4 +1,4 @@
-resource "aws_vpc" "this" {
+resource "aws_vpc" "network" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -8,8 +8,8 @@ resource "aws_vpc" "this" {
   })
 }
 
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
+resource "aws_internet_gateway" "public" {
+  vpc_id = aws_vpc.network.id
 
   tags = merge(var.common_tags, {
     Name = "${var.name_prefix}-igw"
@@ -19,7 +19,7 @@ resource "aws_internet_gateway" "this" {
 resource "aws_subnet" "public" {
   for_each = zipmap(var.availability_zones, var.public_subnet_cidrs)
 
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.network.id
   availability_zone       = each.key
   cidr_block              = each.value
   map_public_ip_on_launch = true
@@ -31,11 +31,11 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
+  vpc_id = aws_vpc.network.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
+    gateway_id = aws_internet_gateway.public.id
   }
 
   tags = merge(var.common_tags, {

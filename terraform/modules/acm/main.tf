@@ -1,4 +1,4 @@
-resource "aws_acm_certificate" "this" {
+resource "aws_acm_certificate" "application" {
   domain_name       = var.domain_name
   validation_method = "DNS"
 
@@ -12,7 +12,7 @@ resource "aws_acm_certificate" "this" {
 }
 resource "aws_route53_record" "validation" {
   for_each = {
-    for option in aws_acm_certificate.this.domain_validation_options :
+    for option in aws_acm_certificate.application.domain_validation_options :
     option.domain_name => {
       name   = option.resource_record_name
       record = option.resource_record_value
@@ -27,8 +27,8 @@ resource "aws_route53_record" "validation" {
   records = [each.value.record]
 }
 
-resource "aws_acm_certificate_validation" "this" {
-  certificate_arn = aws_acm_certificate.this.arn
+resource "aws_acm_certificate_validation" "application" {
+  certificate_arn = aws_acm_certificate.application.arn
 
   validation_record_fqdns = [
     for record in aws_route53_record.validation : record.fqdn
