@@ -35,3 +35,10 @@ module "acm" {
   hosted_zone_id = module.route53_zone.zone_id
   common_tags    = local.common_tags
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  name_prefix = local.name_prefix
+  common_tags = local.common_tags
+}
