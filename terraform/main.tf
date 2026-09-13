@@ -77,3 +77,12 @@ module "ecs" {
 
   depends_on = [module.load_balancer]
 }
+
+module "dns_alias" {
+  source = "./modules/dns-alias"
+
+  zone_id                = module.route53_zone.zone_id
+  hostname               = local.app_hostname
+  load_balancer_dns_name = module.load_balancer.dns_name
+  load_balancer_zone_id  = module.load_balancer.zone_id
+}
