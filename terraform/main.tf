@@ -54,3 +54,26 @@ module "load_balancer" {
   health_check_path = "/"
   common_tags       = local.common_tags
 }
+
+module "ecs" {
+  source = "./modules/ecs"
+
+  name_prefix                     = local.name_prefix
+  vpc_id                          = module.network.vpc_id
+  subnet_ids                      = module.network.public_subnet_ids
+  load_balancer_security_group_id = module.load_balancer.security_group_id
+  target_group_arn                = module.load_balancer.target_group_arn
+  image_uri                       = "${module.ecr.repository_url}:${var.image_tag}"
+  execution_role_arn              = module.iam.execution_role_arn
+  task_role_arn                   = module.iam.task_role_arn
+  container_port                  = 8080
+  desired_count                   = var.desired_count
+  task_cpu                        = 256
+  task_memory                     = 512
+  log_retention_days              = 30
+  assign_public_ip                = true
+  cpu_architecture                = "ARM64"
+  common_tags                     = local.common_tags
+
+  depends_on = [module.load_balancer]
+}
