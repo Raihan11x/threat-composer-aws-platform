@@ -28,7 +28,7 @@ A hands-on DevOps portfolio project for containerising the open-source AWS Threa
 - [x] Served the application locally on port 8080
 - [x] Added `.gitignore` and `.dockerignore` rules
 - [x] Scanned the final image with Docker Scout
-- [ ] Provision Amazon ECR with Terraform
+- [x] Provision Amazon ECR with Terraform
 - [ ] Add a GitHub Actions CI/CD pipeline
 - [ ] Provision the network, load balancer, and ECS resources
 - [ ] Configure DNS and HTTPS
@@ -74,6 +74,9 @@ Stop the container with `Ctrl+C`.
   - 0 high vulnerabilities
   - 0 medium vulnerabilities
   - 3 low vulnerabilities
+- Terraform created the ECR repository successfully
+- The container image was pushed using an immutable Git commit tag
+- Amazon ECR basic scanning completed with 0 findings
 
 The vulnerability result is a snapshot of the image at the time it was scanned and may change as vulnerability databases are updated.
 
