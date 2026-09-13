@@ -7,3 +7,8 @@ output "github_actions_terraform_role_arn" {
   description = "ARN of the IAM role used by the Terraform GitHub Actions workflow"
   value       = aws_iam_role.github_actions_terraform.arn
 }
+
+output "github_actions_image_push_role_arn" {
+  description = "ARN of the IAM role used by the image publishing workflow"
+  value       = aws_iam_role.github_actions_image_push.arn
+}
