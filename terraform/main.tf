@@ -42,3 +42,15 @@ module "iam" {
   name_prefix = local.name_prefix
   common_tags = local.common_tags
 }
+
+module "load_balancer" {
+  source = "./modules/alb"
+
+  name_prefix       = local.name_prefix
+  vpc_id            = module.network.vpc_id
+  public_subnet_ids = module.network.public_subnet_ids
+  certificate_arn   = module.acm.certificate_arn
+  app_port          = 8080
+  health_check_path = "/"
+  common_tags       = local.common_tags
+}
