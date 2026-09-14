@@ -5,12 +5,13 @@
 [![Security controls](https://img.shields.io/badge/security-OIDC%20%7C%20scoped%20IAM-2ea44f)](https://github.com/Raihan11x/threat-composer-aws-platform/tree/main/terraform/bootstrap)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform-844FBA?logo=terraform)](https://github.com/Raihan11x/threat-composer-aws-platform/tree/main/terraform)
 [![AWS ECS](https://img.shields.io/badge/runtime-AWS%20ECS%20Fargate-FF9900?logo=amazonaws)](https://github.com/Raihan11x/threat-composer-aws-platform/tree/main/terraform/modules/ecs)
+[![Live application](https://img.shields.io/badge/live-app.raihanali.co.uk-2ea44f)](https://app.raihanali.co.uk)
 
 A production-grade AWS delivery platform for running the open-source AWS Threat Composer application on Amazon ECS Fargate.
 
 The platform uses modular Terraform, ARM64 containers, keyless GitHub Actions authentication, immutable releases, managed TLS, remote state locking, and guarded infrastructure deployments.
 
-> **Deployment status:** Infrastructure and delivery pipelines are implemented. Public deployment is waiting for domain activation and DNS delegation before the first complete Terraform deployment.
+> **Deployment status:** Live in AWS at [app.raihanali.co.uk](https://app.raihanali.co.uk). DNS is delegated through Route 53, TLS is issued by ACM, and an Application Load Balancer routes HTTPS traffic to the ARM64 ECS Fargate service.
 
 ## Engineering outcomes
 
@@ -80,7 +81,7 @@ flowchart LR
 
 ## Request flow
 
-When deployment is complete, traffic will follow this path:
+Production traffic follows this path:
 
 ```text
 https://app.raihanali.co.uk
@@ -349,24 +350,9 @@ Infrastructure destruction requires the separate `destroy` operation and exact `
 | S3 remote state and native locking | Deployed and verified |
 | Modular Terraform infrastructure | Implemented and validated |
 | Route 53 hosted zone | Deployed |
-| Registrar nameserver delegation | Waiting for domain activation |
-| ACM certificate validation | Pending DNS delegation |
-| ECS, ALB, and public HTTPS deployment | Pending first full apply |
-
-## Further production hardening
-
-The next production improvements would include:
-
-- Running at least two ECS tasks across availability zones
-- Moving ECS tasks into private subnets
-- Adding VPC endpoints or controlled NAT egress
-- Configuring ECS service autoscaling
-- Adding CloudWatch alarms and operational dashboards
-- Enabling ALB access logs
-- Adding AWS WAF protections
-- Gating image publication on application tests and vulnerability severity
-- Pinning GitHub Actions and container images by immutable digest
-- Adding synthetic HTTPS availability monitoring
+| Registrar nameserver delegation | Verified |
+| ACM certificate validation | Issued and verified |
+| ECS, ALB, and public HTTPS deployment | Live and verified |
 
 ## Application source
 
@@ -379,3 +365,4 @@ Threat Composer helps teams create, document, and manage threat models. The upst
 - [Original container workflow](https://github.com/Raihan11x/threat-composer-aws-platform/actions/runs/34739579656)
 - [Optimised successful container workflow](https://github.com/Raihan11x/threat-composer-aws-platform/actions/runs/34746233903)
 - [Repository workflows](https://github.com/Raihan11x/threat-composer-aws-platform/actions)
+- [Live production application](https://app.raihanali.co.uk) — DNS resolution, TLS hostname validation, and HTTP/2 `200` response verified on 14 September 2026
